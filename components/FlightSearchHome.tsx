@@ -1,4 +1,5 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
+import bgImage from "../assets/bgimage.png"
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 // import { Platform } from 'react-native';
@@ -359,7 +360,7 @@ export default function FlightSearchHome() {
       </Modal>
       <View style={styles.heroContainer}>
         <ImageBackground
-          source={{ uri: 'https://www.gstatic.com/travel-frontend/animation/hero/flights_nc_dark_theme_4.svg' }}
+          source={bgImage}
           style={styles.heroArt}
           resizeMode="cover"
         >
