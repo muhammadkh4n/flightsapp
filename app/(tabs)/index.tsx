@@ -33,14 +33,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.welcomeText}>
-          Welcome, {user?.firstName || user?.emailAddresses[0]?.emailAddress || 'User'}!
-        </Text>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
       <FlightSearchHome />
     </View>
   );
@@ -60,15 +52,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 10,
-    backgroundColor: '#0066CC',
-  },
+ 
   welcomeText: {
     color: '#fff',
     fontSize: 16,
@@ -76,7 +60,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   signOutButton: {
-    backgroundColor: '#FF6B35',
+    backgroundColor: '#23242A',
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 5,
