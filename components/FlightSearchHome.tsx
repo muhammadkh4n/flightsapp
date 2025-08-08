@@ -1,10 +1,12 @@
 import { useAuth, useUser } from '@clerk/clerk-expo';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+// import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { router } from 'expo-router';
 import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ImageBackground, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useDebounce } from '../utils/useDebounce';
-import { ActivityIndicator, ImageBackground, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 const RAPIDAPI_KEY = Constants.expoConfig?.extra?.RAPIDAPI_KEY || '';
 
 // Popular cities data with skyId and entityId for flight search
@@ -38,11 +40,15 @@ const popularCities = [
 
 
 export default function FlightSearchHome() {
+  const [showDeparturePicker, setShowDeparturePicker] = useState(false);
+  const [showReturnPicker, setShowReturnPicker] = useState(false);
   const { signOut } = useAuth();
   const { user } = useUser();
   const [cabinClass, setCabinClass] = useState('economy');
   const [date, setDate] = useState('2025-08-15');
   const [returnDate, setReturnDate] = useState('');
+  const [departureDateObj, setDepartureDateObj] = useState<Date>(new Date('2025-08-15'));
+  const [returnDateObj, setReturnDateObj] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingOrigin, setLoadingOrigin] = useState(false);
   const [loadingDestination, setLoadingDestination] = useState(false);
@@ -86,31 +92,31 @@ export default function FlightSearchHome() {
 
     // Input validation - Both SkyIds AND EntityIds are required for this endpoint
     if (!originCity.trim()) {
-      setError('Please enter origin city (e.g., Lahore, Islamabad)');
-      return;
+  // ...existing code...
+  return;
     }
     if (!destinationCity.trim()) {
-      setError('Please enter destination city (e.g., Karachi, Dubai)');
-      return;
+  // ...existing code...
+  return;
     }
     if (!originSkyId || !originEntityId) {
-      setError(`Origin city "${originCity}" - waiting for airport codes to load. Please wait...`);
-      return;
+  // ...existing code...
+  return;
     }
     if (!destinationSkyId || !destinationEntityId) {
-      setError(`Destination city "${destinationCity}" - waiting for airport codes to load. Please wait...`);
-      return;
+  // ...existing code...
+  return;
     }
     if (!date || !adults || !cabinClass) {
-      setError('Please fill all required fields (date, passengers, cabin class).');
-      return;
+  // ...existing code...
+  return;
     }
     // Date validation (must be in YYYY-MM-DD and not in the past)
     const today = new Date();
     const depDate = new Date(date);
     if (isNaN(depDate.getTime()) || depDate < today) {
-      setError('Please enter a valid future departure date (YYYY-MM-DD).');
-      return;
+  // ...existing code...
+  return;
     }
     setLoading(true);
     setError('');
@@ -196,25 +202,22 @@ export default function FlightSearchHome() {
       // Show API error messages if present
       if (data.status === false) {
         if (data.message && data.message.action === 'captcha') {
-          setError('API CAPTCHA protection activated. This usually means too many requests. Please:\n• Wait 5-10 minutes before trying again\n• Check your RapidAPI plan limits\n• Consider upgrading your RapidAPI subscription');
+      // ...existing code...
         } else if (data.message) {
-          setError(`API Error: ${JSON.stringify(data.message)} - Please check your airport codes and dates.`);
+      // ...existing code...
         } else {
-          setError('No flights found for your search criteria.');
+      // ...existing code...
         }
         setResults(data); // Still set results to see the full response
       } else if (data.data && data.data.messages && data.data.messages.length > 0) {
-        setError(`API Message: ${data.data.messages.join(' ')} - Try different search criteria.`);
-        setResults(data);
-      } else if (data.data && data.data.context && data.data.context.status && data.data.context.status !== 'complete') {
-        setError(`API Context Status: ${data.data.context.status}. Try changing your search criteria.`);
-        setResults(data);
+    // ...existing code...
+        setResults(data); 
       } else {
         setResults(data);
       }
     } catch (err) {
       console.error('Flight search error:', err);
-      setError('Failed to fetch flights. Please check your internet connection and try again.');
+  // ...existing code...
       setResults(null);
     }
     setLoading(false);
@@ -425,25 +428,124 @@ export default function FlightSearchHome() {
         <View style={styles.inputRowBottom}>
           <View style={styles.googleInputBoxDate}>
             <Ionicons name="calendar" size={18} color="#bbb" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.googleInputText}
-              placeholder="Departure"
-              value={date}
-              onChangeText={setDate}
-              placeholderTextColor="#bbb"
-            />
+            <TouchableOpacity onPress={() => setShowDeparturePicker(true)} style={{flex: 1}}>
+              <Text style={styles.googleInputText}>{date ? date : 'Departure'}</Text>
+            </TouchableOpacity>
           </View>
           <View style={styles.googleInputBoxReturn}>
             <Ionicons name="calendar" size={18} color="#bbb" style={{ marginRight: 8 }} />
-            <TextInput
-              style={styles.googleInputText}
-              placeholder="Return"
-              value={returnDate}
-              onChangeText={setReturnDate}
-              placeholderTextColor="#bbb"
-            />
+            <TouchableOpacity onPress={() => setShowReturnPicker(true)} style={{flex: 1}}>
+              <Text style={styles.googleInputText}>{returnDate ? returnDate : 'Return'}</Text>
+            </TouchableOpacity>
           </View>
         </View>
+
+        {/* Departure Date Picker Modal */}
+        {showDeparturePicker && (
+          <Modal
+            visible={showDeparturePicker}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowDeparturePicker(false)}
+          >
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)'}}>
+              <View style={{backgroundColor: 'white', borderRadius: 16, padding: 24, width: 340, maxWidth: '95%', alignItems: 'center', elevation: 8}}>
+                <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 18, color: '#333'}}>Select Departure Date</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={date}
+                    min={new Date().toISOString().slice(0, 10)}
+                    onChange={e => {
+                      setDate(e.target.value);
+                      setDepartureDateObj(new Date(e.target.value));
+                    }}
+                    style={{fontSize: 22, padding: 12, borderRadius: 8, border: '1px solid #ccc', marginBottom: 18, width: '100%'}}
+                  />
+                ) : (
+                  <DateTimePicker
+                    value={departureDateObj}
+                    mode="date"
+                    display="calendar"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) {
+                        setDepartureDateObj(selectedDate);
+                      }
+                    }}
+                    minimumDate={new Date()}
+                    style={{width: 280, height: 320, marginBottom: 18}}
+                  />
+                )}
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 8}}>
+                  <TouchableOpacity style={{backgroundColor: '#111215', padding: 12, borderRadius: 8, flex: 1, marginRight: 10}} onPress={() => setShowDeparturePicker(false)}>
+                    <Text style={{color: 'white', fontWeight: 'bold', textAlign: 'center'}}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{backgroundColor: '#111215', padding: 12, borderRadius: 8, flex: 1, marginLeft: 10}} onPress={() => {
+                    const formatted = departureDateObj.toISOString().slice(0, 10);
+                    setDate(formatted);
+                    setShowDeparturePicker(false);
+                  }}>
+                    <Text style={{color: 'white', fontWeight: 'bold', textAlign: 'center'}}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
+
+        {/* Return Date Picker Modal */}
+        {showReturnPicker && (
+          <Modal
+            visible={showReturnPicker}
+            transparent={true}
+            animationType="fade"
+            onRequestClose={() => setShowReturnPicker(false)}
+          >
+            <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)'}}>
+              <View style={{backgroundColor: 'white', borderRadius: 16, padding: 24, width: 340, maxWidth: '95%', alignItems: 'center', elevation: 8}}>
+                <Text style={{fontSize: 18, fontWeight: 'bold', marginBottom: 18, color: '#333'}}>Select Return Date</Text>
+                {Platform.OS === 'web' ? (
+                  <input
+                    type="date"
+                    value={returnDate}
+                    min={departureDateObj.toISOString().slice(0, 10)}
+                    onChange={e => {
+                      setReturnDate(e.target.value);
+                      setReturnDateObj(new Date(e.target.value));
+                    }}
+                    style={{fontSize: 22, padding: 12, borderRadius: 8, border: '1px solid #ccc', marginBottom: 18, width: '100%'}}
+                  />
+                ) : (
+                  <DateTimePicker
+                    value={returnDateObj ? returnDateObj : departureDateObj}
+                    mode="date"
+                    display="calendar"
+                    onChange={(event, selectedDate) => {
+                      if (selectedDate) {
+                        setReturnDateObj(selectedDate);
+                      }
+                    }}
+                    minimumDate={departureDateObj}
+                    style={{width: 280, height: 320, marginBottom: 18}}
+                  />
+                )}
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', width: '100%', marginTop: 8}}>
+                  <TouchableOpacity style={{backgroundColor: '#111215', padding: 12, borderRadius: 8, flex: 1, marginRight: 10}} onPress={() => setShowReturnPicker(false)}>
+                    <Text style={{color: 'white', fontWeight: 'bold', textAlign: 'center'}}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={{backgroundColor: '#111215', padding: 12, borderRadius: 8, flex: 1, marginLeft: 10}} onPress={() => {
+                    const selectedDate = returnDateObj ? returnDateObj : departureDateObj;
+                    const formatted = selectedDate.toISOString().slice(0, 10);
+                    setReturnDate(formatted);
+                    setShowReturnPicker(false);
+                  }}>
+                    <Text style={{color: 'white', fontWeight: 'bold', textAlign: 'center'}}>Done</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+        )}
         <TouchableOpacity style={styles.googleExploreBtn} onPress={fetchFlights} disabled={loading}>
           <Ionicons name="search" size={20} color="#fff" />
           <Text style={styles.googleExploreText}>Explore</Text>
@@ -457,12 +559,7 @@ export default function FlightSearchHome() {
           <Text style={styles.loadingText}>Searching flights...</Text>
         </View>
       )}
-      {error ? (
-        <View style={styles.errorContainer}>
-          <Ionicons name="alert-circle" size={24} color="#ff6b6b" />
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      ) : null}
+  {/* Error messages removed from UI as requested */}
       {results && results.data && results.data.itineraries && results.data.itineraries.length > 0 && (
         <View style={styles.resultsContainer}>
           <Text style={styles.resultsTitle}>Available Flights</Text>
