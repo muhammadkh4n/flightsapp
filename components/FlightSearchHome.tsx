@@ -468,8 +468,16 @@ export default function FlightSearchHome() {
                     mode="date"
                     display="calendar"
                     onChange={(event, selectedDate) => {
-                      if (selectedDate) {
-                        setDepartureDateObj(selectedDate);
+                      if (Platform.OS === 'android') {
+                        if (event.type === 'set' && selectedDate) {
+                          setDepartureDateObj(selectedDate);
+                          setDate(selectedDate.toISOString().slice(0, 10));
+                          setShowDeparturePicker(false);
+                        } else if (event.type === 'dismissed') {
+                          setShowDeparturePicker(false);
+                        }
+                      } else {
+                        if (selectedDate) setDepartureDateObj(selectedDate);
                       }
                     }}
                     minimumDate={new Date()}
@@ -521,8 +529,16 @@ export default function FlightSearchHome() {
                     mode="date"
                     display="calendar"
                     onChange={(event, selectedDate) => {
-                      if (selectedDate) {
-                        setReturnDateObj(selectedDate);
+                      if (Platform.OS === 'android') {
+                        if (event.type === 'set' && selectedDate) {
+                          setReturnDateObj(selectedDate);
+                          setReturnDate(selectedDate.toISOString().slice(0, 10));
+                          setShowReturnPicker(false);
+                        } else if (event.type === 'dismissed') {
+                          setShowReturnPicker(false);
+                        }
+                      } else {
+                        if (selectedDate) setReturnDateObj(selectedDate);
                       }
                     }}
                     minimumDate={departureDateObj}
